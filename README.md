@@ -10,7 +10,7 @@
 ### Convolution Kernel  
  畳み込みの重みの画像を入れるところです。ブラー用途ならガウス分布の画像を入れます。  
 ![g3](https://user-images.githubusercontent.com/44022497/230787380-14885ebc-4339-478b-a582-e7889fdde548.png)  
- 画像サイズはFFTサイズに関係なく特に指定ありません。  
+ 画像サイズはFFTサイズに関係なく特に指定ありません。計算時にFFTサイズに拡縮されます。  
  画像の中心が基準点となるように用意して下さい。例えば512×512サイズの画像なら(256,256)の位置が自分のピクセルの重みとして畳み込み計算されます。  
 
 ### Use256x4  
@@ -38,17 +38,49 @@
  畳み込み前に画像に余白を持たせて、畳み込み後にその余白部分を使わない設定です。  
  ![巡回](https://user-images.githubusercontent.com/44022497/230788606-912f025e-3f8f-42e9-87f8-37d066d5f3da.jpg)  
  これはBorderRatio=0.0で強いブラーをかけた結果になります。本来右にある太陽ですが、右端と左端がつながっているため画面左にも光が漏れてしまっています。BorderRatioを適切な値に増やすことで漏れ部分を隠すことができます。  
- 
- 
-## Gauss Blur Render Pass
- 単純にガウスブラーを行なうものです。  
- Convolution Kernelにガウス分布の画像をセットすることで画面全体にブラーをかけることができます。  
 
-## TODOリスト
+### Threshold
+ 画面の明るい部分の閾値。  
+ Convolution Bloomでのみ使われます。閾値を超えるピクセルにBloomがかかります。  
+ 
+# 3つのモード
+
+## Gauss Blur Render Pass
+ 単純にブラーを行なうものです。  
+ BorderRatioは無視されます。  
+ Convolution Kernelにガウス分布の重み画像をセットすることで画面全体にガウスブラーをかけることができます。Convolution Kernel次第でいろんなフィルターをかけることができます。  
+ 
+## Gauss Blur Border Render Pass 
+ BorderRatioを考慮したGauss Blur Render Passです。
+
+## Bloom Render Pass
+ Convolution Bloomを行なうPassです。  
+  
+ Unreal-Engineの公式ドキュメントも参照下さい。  
+ https://docs.unrealengine.com/5.1/en-US/bloom-in-unreal-engine/  
+ https://docs.unrealengine.com/4.27/ja/RenderingAndGraphics/PostProcessEffects/Bloom/  
+  
+ カーネル画像を用意することろが地味に難関ですが、用意できればポストエフェクトの幅が広がります。  
+### 例1
+ kernel画像と実行結果  
+ ![samp5](https://user-images.githubusercontent.com/44022497/230789193-7af7a9c7-92d6-4818-95e0-084f4b6114ee.jpg)
+ ![説明8](https://user-images.githubusercontent.com/44022497/230789234-a674cb95-186d-40c6-91ed-b258e7a1c950.gif)  
+### 例2 
+ kernel画像と実行結果  
+ ![samp4](https://user-images.githubusercontent.com/44022497/230789262-ab2d983c-e36c-4115-8b72-362ab7f4928d.jpg)
+ ![bloom2](https://user-images.githubusercontent.com/44022497/230789269-b856ad1b-a8bd-4fdc-a105-85b0f3ef065b.jpg)  
+### 例3 
+ kernel画像と実行結果  
+ ![samp1](https://user-images.githubusercontent.com/44022497/230789287-1ceba284-a26a-4083-8145-b2ad88a24465.jpg)
+ ![bloom1](https://user-images.githubusercontent.com/44022497/230789289-8824235d-6fde-449a-b016-23ee3781892a.jpg)  
+
+
+# TODOリスト
 ・今はFFTサイズが512×512固定だが可変にできるようにする  
 ・実行中にConvolution Kernelを変更したら自動で重みを再計算するようにする  
 ・Convolution Kernelのスケールを設定できるようにする  
 ・Convolution Kernelの中心ピボットを設定できるようにする  
+・今はBorderRatioで余分な余白を作って対処しているところを、負巡回畳み込み乗算を使って解決する。計算量は2倍になる(多分)がBorderRatioは0にできるはず  
 
-## その他
+# その他
 ・FFTサイズの変更はソースコード内を直接いじって下さい。C#側とCompute Shader側にそれぞれあります。  
