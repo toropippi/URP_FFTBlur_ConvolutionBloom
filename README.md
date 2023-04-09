@@ -1,7 +1,9 @@
 # URP_FFTBlur_ConvolutionBloom 
  Blur and convolution bloom implementation using 2DFFT  
  このリポジトリは2D FFTを用いたブラーとConvolution Bloomの実装になります。  
- 
+ ![説明8](https://user-images.githubusercontent.com/44022497/230789234-a674cb95-186d-40c6-91ed-b258e7a1c950.gif)
+ ![blur](https://user-images.githubusercontent.com/44022497/230791100-ac21dc16-52ef-4ded-989a-2278afd35d3f.jpeg)  
+  
 # 使い方 How to use 
  ユーザーがいじれるところ主に2ヶ所です。  
 ## 1.Hierarchyタブにある「FFTObject」  
