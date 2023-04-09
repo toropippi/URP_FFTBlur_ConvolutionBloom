@@ -73,14 +73,16 @@
  kernel画像と実行結果  
  ![samp1](https://user-images.githubusercontent.com/44022497/230789287-1ceba284-a26a-4083-8145-b2ad88a24465.jpg)
  ![bloom1](https://user-images.githubusercontent.com/44022497/230789289-8824235d-6fde-449a-b016-23ee3781892a.jpg)  
-
-
+ 
 # TODOリスト
-・今はFFTサイズが512×512固定だが可変にできるようにする  
+・FFTサイズは512×512固定だがインスペクターから可変にできるようにする  
 ・実行中にConvolution Kernelを変更したら自動で重みを再計算するようにする  
 ・Convolution Kernelのスケールを設定できるようにする  
 ・Convolution Kernelの中心ピボットを設定できるようにする  
-・今はBorderRatioで余分な余白を作って対処しているところを、負巡回畳み込み乗算を使って解決する。計算量は2倍になる(多分)がBorderRatioは0にできるはず  
+・今はBorderRatioで余白を作って対処しているところを、負巡回畳み込み乗算を使って解決する。計算量は2倍になる(多分)がBorderRatioは0にできるはず  
 
 # その他
 ・FFTサイズの変更はソースコード内を直接いじって下さい。C#側とCompute Shader側にそれぞれあります。  
+・Assets/FFTConvolutionBloom/ConvolutionTexture以下にある全画像ファイルは自分が生成したものですが、商用利用OK、 改変OK、クレジット表記不要の「CC0」ライセンスとします。  
+
+
