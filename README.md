@@ -60,7 +60,7 @@
  https://docs.unrealengine.com/5.1/en-US/bloom-in-unreal-engine/  
  https://docs.unrealengine.com/4.27/ja/RenderingAndGraphics/PostProcessEffects/Bloom/  
   
- カーネル画像を用意することろが地味に難関ですが、用意できればポストエフェクトの幅が広がります。  
+ kernel画像を用意することろが地味に難関ですが、用意できればポストエフェクトの幅が広がります。  
 ### 例1
  kernel画像と実行結果  
  ![samp5](https://user-images.githubusercontent.com/44022497/230789193-7af7a9c7-92d6-4818-95e0-084f4b6114ee.jpg)
@@ -80,6 +80,7 @@
 ・Convolution Kernelのスケールを設定できるようにする  
 ・Convolution Kernelの中心ピボットを設定できるようにする  
 ・今はBorderRatioで余白を作って対処しているところを、負巡回畳み込み乗算を使って解決する。計算量は2倍になる(多分)がBorderRatioは0にできるはず  
+・Kernel画像の自動生成プログラムもそのうち公開したい  
 
 # その他
 ・FFTサイズの変更はソースコード内を直接いじって下さい。C#側とCompute Shader側にそれぞれあります。  
