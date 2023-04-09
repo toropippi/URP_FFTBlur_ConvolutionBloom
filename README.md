@@ -15,7 +15,7 @@
 
 ### Use256x4  
 Convolution Kernelの1枚を使うか、ConvolutionKernel_256x4a～dの4枚を使うか指定できます。  
-主にブラー用途ではConvolution Kernelを、Convolution Bloom用途ではConvolutionKernel_256x4a～dを使います。  
+主にブラー用途ではチェックなし、Convolution Bloom用途ではチェックして下さい。  
 Convolution Bloomを行なう場合、Kernelにはかなりのダイナミックレンジが要求されます。例えば以下のKernelを使いたいとします。  
 ![6](https://user-images.githubusercontent.com/44022497/230788304-93bda2eb-9d58-468b-95dc-9a593b132c5b.jpg)  
 このとき画像の中心の一番明るい部分と画面端の黒い部分は本来1万倍～100万倍近く違ってないといけません。この画像では真ん中が白飛びして、端のほうは黒飛びしてしまっています。  
@@ -23,6 +23,9 @@ Convolution Bloomを行なう場合、Kernelにはかなりのダイナミック
 今回サンプルを7つほど用意しているのでそれをお使い下さい。  
 また自前で色深度が十分なpng画像を用意できるならUse256x4のチェックはせずにConvolution Kernelを使うこともできます。  
 
+### Intensity
+畳み込み画像に適応される色倍率です。  
+ブラー用途では1.0、Convolution Bloom用途では100.0くらいが適切な値です。  
 
 ## 2.SettingsのUniversalRendererにアタッチしてあるFeature  
  <img width="460" alt="setumei2.png" src="https://user-images.githubusercontent.com/44022497/230786919-4ac6aabd-bdba-4df5-b4fc-e948c3e7cf42.png">
