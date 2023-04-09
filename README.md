@@ -3,7 +3,7 @@
  このリポジトリは2D FFTを用いたブラーとConvolution Bloomの実装になります。  
  
 # 使い方 How to use 
- ユーザーがいじれるところ主に2つです。  
+ ユーザーがいじれるところ主に2ヶ所です。  
 ## 1.Hierarchyタブにある「FFTObject」  
  ![setumei1](https://user-images.githubusercontent.com/44022497/230786923-027d994a-c45b-46ad-95b3-54b60a882aff.png)  
  
@@ -17,7 +17,7 @@
 Convolution Kernelの1枚を使うか、ConvolutionKernel_256x4a～dの4枚を使うか指定できます。  
 主にブラー用途ではConvolution Kernelを、Convolution Bloom用途ではConvolutionKernel_256x4a～dを使います。  
 Convolution Bloomを行なう場合、Kernelにはかなりのダイナミックレンジが要求されます。例えば以下のKernelを使いたいとします。  
-![6](https://user-images.githubusercontent.com/44022497/230787833-e762b014-3b99-4cd3-b03f-523aef6ad2a5.jpg)  
+![6](https://user-images.githubusercontent.com/44022497/230788304-93bda2eb-9d58-468b-95dc-9a593b132c5b.jpg)  
 このとき画像の中心の一番明るい部分と画面端の黒い部分は本来1万倍～100万倍近く違ってないといけません。この画像では真ん中が白飛びして、端のほうは黒飛びしてしまっています。  
 普通のpng画像はせいぜいRGBAそれぞれ8bitなのでレンジが狭くこのままでは使えません。そこでa～dの4枚用意し、a*1677216+b*65536+c*256+dを本当の色として計算を行ないます。  
 今回サンプルを7つほど用意しているのでそれをお使い下さい。  
