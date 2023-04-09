@@ -24,8 +24,6 @@ int width, height;//tex_ro's (width, height)
 bool use256x4;
 
 
-
-
 [numthreads(8, 8, 1)]
 void BufToTex(uint2 id : SV_DispatchThreadID)
 {
@@ -37,9 +35,6 @@ void BufToTex(uint2 id : SV_DispatchThreadID)
 	float a = Buf_ro[bid * 4 + 3];
 	Tex[id] = float4(r, g, b, a);
 }
-
-
-
 
 [numthreads(8, 8, 1)]
 void CopySlide(uint2 id : SV_DispatchThreadID)
@@ -56,8 +51,6 @@ void CopySlide(uint2 id : SV_DispatchThreadID)
 	InterlockedAdd(SumBuf[1], (uint)(f4.y * 255.0 + 0.5));
 	InterlockedAdd(SumBuf[2], (uint)(f4.z * 255.0 + 0.5));
 }
-
-
 
 
 [numthreads(NY / 2, 1, 1)]
@@ -99,12 +92,6 @@ void FFTWY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_G
 	Tex[float2(gi, grid)] = reim0;
 	Tex[float2(gi + NY / 2, grid)] = reim1;
 }
-
-
-
-
-
-
 
 
 [numthreads(NX / 2, 1, 1)]
@@ -186,9 +173,6 @@ void FFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_Gr
 		Tex[uint2(NX / 4 * 3 + 1, grid)] = g4;
 	}
 }
-
-
-
 
 [numthreads(NY / 2, 1, 1)]
 void FFTY_HADAMARD_IFFTY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
@@ -319,7 +303,6 @@ void IFFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_G
 	}
 	
 
-
 	for (uint loopidx = 0; loopidx < MX; loopidx++)
 	{
 		uint dleng = 1 << (MX - loopidx - 1);
@@ -357,215 +340,3 @@ void IFFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_G
 	//h4.w = 1;
 	Tex[uint2(gi + NX / 2, grid)] = h4;
 }
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-[numthreads(N / 2, 1, 1)]
-void FFTWY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
-{
-	block[gi] = Tex_ro[float2(grid, gi)];
-	block[gi + N / 2] = Tex_ro[float2(grid, gi + N / 2)];
-	for (int loopidx = 0; loopidx < M; loopidx++)
-	{
-		uint dleng = 1 << (M - loopidx - 1);
-		uint t = gi % dleng;
-		uint t0 = (gi / dleng) * dleng * 2 + t;
-		uint t1 = t0 + dleng;
-		GroupMemoryBarrierWithGroupSync();
-		float4 ri4t1, ri4t0;
-		ri4t1 = block[t1];
-		ri4t0 = block[t0];
-		float rad = -PI * t / dleng;
-		float fsin = sin(rad);
-		float fcos = cos(rad);
-		block[t0] = ri4t0 + ri4t1;
-		ri4t0 -= ri4t1;
-		ri4t1.x = ri4t0.x * fcos - ri4t0.y * fsin;
-		ri4t1.y = ri4t0.x * fsin + ri4t0.y * fcos;
-		ri4t1.z = ri4t0.z * fcos - ri4t0.w * fsin;
-		ri4t1.w = ri4t0.z * fsin + ri4t0.w * fcos;
-		block[t1] = ri4t1;
-	}
-	GroupMemoryBarrierWithGroupSync();
-	float4 reim0 = block[gi];
-	float4 reim1 = block[gi + N / 2];
-
-	if (settingflag == 0)
-	{
-		Tex[float2(gi, grid)] = reim0;
-		Tex[float2(gi + N / 2, grid)] = reim1;
-		Weight4[gi + grid * N] = reim0;
-		Weight4[gi + N / 2 + grid * N] = reim1;
-		Weight4[gi + grid * N] = reim0;
-		Weight4[gi + N / 2 + grid * N] = reim1;
-		Weight1[gi + grid * N] = reim0.x;
-		Weight1[gi + N / 2 + grid * N] = reim1.x;
-	}
-	if (settingflag == 1)
-	{
-		float4 f4;
-		f4 = Tex[float2(gi, grid)];
-		f4.yw = reim0.xz;
-		Tex[float2(gi, grid)] = f4;
-
-		f4 = Tex[float2(gi + N / 2, grid)];
-		f4.yw = reim1.xz;
-		Tex[float2(gi + N / 2, grid)] = f4;
-
-		f4 = Weight4[gi + grid * N];
-		f4.yw = reim0.xz;
-		Weight4[gi + grid * N] = f4;
-
-		f4 = Weight4[gi + N / 2 + grid * N];
-		f4.yw = reim1.xz;
-		Weight4[gi + N / 2 + grid * N] = f4;
-	}
-}
-
-
-
-
-
-[numthreads(N / 2, 1, 1)]
-void FFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
-{
-	block[gi] = Tex_ro[float2(gi, grid)];
-	block[gi + N / 2] = Tex_ro[float2(gi + N / 2, grid)];
-	for (int loopidx = 0; loopidx < M; loopidx++)
-	{
-		uint dleng = 1 << (M - loopidx - 1);
-		uint t = gi % dleng;
-		uint t0 = (gi / dleng) * dleng * 2 + t;
-		uint t1 = t0 + dleng;
-		GroupMemoryBarrierWithGroupSync();
-		float4 ri4t1, ri4t0;
-		ri4t1 = block[t1];
-		ri4t0 = block[t0];
-		float rad = -PI * t / dleng;
-		float fsin = sin(rad);
-		float fcos = cos(rad);
-		block[t0] = ri4t0 + ri4t1;
-		ri4t0 -= ri4t1;
-		ri4t1.x = ri4t0.x * fcos - ri4t0.y * fsin;
-		ri4t1.y = ri4t0.x * fsin + ri4t0.y * fcos;
-		ri4t1.z = ri4t0.z * fcos - ri4t0.w * fsin;
-		ri4t1.w = ri4t0.z * fsin + ri4t0.w * fcos;
-		block[t1] = ri4t1;
-	}
-	GroupMemoryBarrierWithGroupSync();
-	Tex[float2(gi, grid)] = block[gi];
-	Tex[float2(gi + N / 2, grid)] = block[gi + N / 2];
-}
-
-
-[numthreads(N / 2, 1, 1)]
-void FFTY_HADAMARD_IFFTY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
-{
-	block[gi] = Tex[float2(grid, gi)];
-	block[gi + N / 2] = Tex[float2(grid, gi + N / 2)];
-	for (int loopidx = 0; loopidx < M; loopidx++)
-	{
-		uint dleng = 1 << (M - loopidx - 1);
-		uint t = gi % dleng;
-		uint t0 = (gi / dleng) * dleng * 2 + t;
-		uint t1 = t0 + dleng;
-		GroupMemoryBarrierWithGroupSync();
-		float4 ri4t1, ri4t0;
-		ri4t1 = block[t1];
-		ri4t0 = block[t0];
-		float rad = -PI * t / dleng;
-		float fsin = sin(rad);
-		float fcos = cos(rad);
-		block[t0] = ri4t0 + ri4t1;
-		ri4t0 -= ri4t1;
-		ri4t1.x = ri4t0.x * fcos - ri4t0.y * fsin;
-		ri4t1.y = ri4t0.x * fsin + ri4t0.y * fcos;
-		ri4t1.z = ri4t0.z * fcos - ri4t0.w * fsin;
-		ri4t1.w = ri4t0.z * fsin + ri4t0.w * fcos;
-		block[t1] = ri4t1;
-	}
-	GroupMemoryBarrierWithGroupSync();
-	float4 reim0 = block[gi];
-	float4 reim1 = block[gi + N / 2];
-	if (_isRGBA_weight) 
-	{// HADAMARD MUL
-		reim0.xyzw *= Weight4_ro[gi + grid * N];
-		reim1.xyzw *= Weight4_ro[(gi + N / 2) + grid * N];
-	}
-	else 
-	{// HADAMARD MUL
-		reim0.xyzw *= Weight1_ro[gi + grid * N];
-		reim1.xyzw *= Weight1_ro[(gi + N / 2) + grid * N];
-	}
-	block[gi] = reim0;
-	block[gi + N / 2] = reim1;
-	//step2 load
-	for (int loopidx = 0; loopidx < M; loopidx++)
-	{
-		uint dleng = 1 << (loopidx);
-		uint t = gi % dleng;
-		uint t0 = (gi / dleng) * dleng * 2 + t;
-		uint t1 = t0 + dleng;
-		GroupMemoryBarrierWithGroupSync();
-		float4 ri4t1, ri4t0;
-		ri4t1 = block[t1];
-		ri4t0 = block[t0];
-		float rad = PI * t / dleng;//inv -
-		float fsin = sin(rad);
-		float fcos = cos(rad);
-		float4 ri4t2;
-		ri4t2.x = ri4t1.x * fcos - ri4t1.y * fsin;
-		ri4t2.y = ri4t1.x * fsin + ri4t1.y * fcos;
-		ri4t2.z = ri4t1.z * fcos - ri4t1.w * fsin;
-		ri4t2.w = ri4t1.z * fsin + ri4t1.w * fcos;
-		block[t1] = ri4t0 - ri4t2;
-		block[t0] = ri4t0 + ri4t2;
-	}
-	GroupMemoryBarrierWithGroupSync();
-	Tex[float2(grid, gi)] = block[gi];
-	Tex[float2(grid, gi + N / 2)] = block[gi + N / 2];
-}
-
-
-[numthreads(N / 2, 1, 1)]
-void IFFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
-{
-	block[gi] = Tex_ro[float2(gi, grid)];
-	block[gi + N / 2] = Tex_ro[float2(gi + N / 2, grid)];
-	for (int loopidx = 0; loopidx < M; loopidx++)
-	{
-		uint dleng = 1 << (loopidx);
-		uint t = gi % dleng;
-		uint t0 = (gi / dleng) * dleng * 2 + t;
-		uint t1 = t0 + dleng;
-		GroupMemoryBarrierWithGroupSync();
-		float4 ri4t1, ri4t0;
-		ri4t1 = block[t1];
-		ri4t0 = block[t0];
-		float rad = PI * t / dleng;//inv -
-		float fsin = sin(rad);
-		float fcos = cos(rad);
-		float4 ri4t2;
-		ri4t2.x = ri4t1.x * fcos - ri4t1.y * fsin;
-		ri4t2.y = ri4t1.x * fsin + ri4t1.y * fcos;
-		ri4t2.z = ri4t1.z * fcos - ri4t1.w * fsin;
-		ri4t2.w = ri4t1.z * fsin + ri4t1.w * fcos;
-		block[t1] = ri4t0 - ri4t2;
-		block[t0] = ri4t0 + ri4t2;
-	}
-	GroupMemoryBarrierWithGroupSync();
-	Tex[float2(gi, grid)] = block[gi] / N / N;
-	Tex[float2(gi + N / 2, grid)] = block[gi + N / 2] / N / N;
-}
-
-*/
