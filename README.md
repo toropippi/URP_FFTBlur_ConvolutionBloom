@@ -5,9 +5,10 @@
 # 使い方 How to use 
  ユーザーがいじれるところ主に2つです。  
  1.Hierarchyタブにある「FFTObject」  
- ![説明3](https://user-images.githubusercontent.com/44022497/230786919-4ac6aabd-bdba-4df5-b4fc-e948c3e7cf42.png)  
+ ![setumei1](https://user-images.githubusercontent.com/44022497/230786923-027d994a-c45b-46ad-95b3-54b60a882aff.png)  
  2.SettingsのUniversalRendererにアタッチしてあるFeature  
- ![説明4](https://user-images.githubusercontent.com/44022497/230786923-027d994a-c45b-46ad-95b3-54b60a882aff.png)  
+ <img width="300" alt="setumei2.png" src="https://user-images.githubusercontent.com/44022497/230786919-4ac6aabd-bdba-4df5-b4fc-e948c3e7cf42.png">
+ 
  
  
  
