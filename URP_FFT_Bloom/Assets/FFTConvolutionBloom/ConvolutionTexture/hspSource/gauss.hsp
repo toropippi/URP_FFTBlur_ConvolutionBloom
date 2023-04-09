@@ -1,0 +1,38 @@
+ddim _weights,256
+wLength=1024
+_blur=723.0
+d = _blur * _blur * 0.001
+total=0.0
+
+repeat wLength/2+1
+	i=cnt
+	x = 1.0 + i * 2
+	w = expf(-0.5 * (x * x) / d)
+	_weights.i = w
+	_weights.((wLength - i) \ wLength) = w
+	if ((i != 0) & (i != (wLength / 2))){
+	    w *= 2.0f
+	}
+	total += w
+loop
+
+
+repeat wLength
+	_weights.cnt/=total
+loop
+
+www=643.0
+
+buffer 1,wLength,wLength
+repeat wLength
+ccnt=cnt
+	repeat wLength
+	col=_weights.ccnt*_weights.cnt
+	icol=int(255.45*col*www+0.5)
+	color icol,icol,icol
+	pset (cnt+wLength/2)\wLength,(ccnt+wLength/2)\wLength
+	loop
+loop
+
+bmpsave "g.bmp"
+end
