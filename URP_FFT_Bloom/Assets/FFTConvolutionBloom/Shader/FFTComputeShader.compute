@@ -4,46 +4,39 @@
 #pragma kernel IFFTX
 #pragma kernel FFTWY
 #pragma kernel CopySlide
+#pragma kernel BufToTex
 #define PI 3.14159265358979323846264338328
 
-#define MX (10)
-#define MY (10)
+#define MX (9)
+#define MY (9)
 #define NX (1<<MX)
 #define NY (1<<MY)
 
 RWTexture2D<float4> Tex;
 Texture2D<float4> Tex_ro;//read only
+StructuredBuffer<float> Buf_ro;
 RWStructuredBuffer<uint> SumBuf;
 groupshared float4 blockX[NX];
 groupshared float4 blockY[NY];
 
-
-
 float _intensity;
 int width, height;//tex_ro's (width, height)
+bool use256x4;
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+[numthreads(8, 8, 1)]
+void BufToTex(uint2 id : SV_DispatchThreadID)
+{
+	if ((id.x >= (uint)width) | (id.y >= (uint)height))return;
+	uint bid = id.x + id.y * width;
+	float r = Buf_ro[bid * 4 + 0];
+	float g = Buf_ro[bid * 4 + 1];
+	float b = Buf_ro[bid * 4 + 2];
+	float a = Buf_ro[bid * 4 + 3];
+	Tex[id] = float4(r, g, b, a);
+}
 
 
 
@@ -54,12 +47,11 @@ void CopySlide(uint2 id : SV_DispatchThreadID)
 	if ((id.x >= (uint)width) | (id.y >= (uint)height))return;
 
 	float2 idx = float2(id.x, id.y) + float2(width, height) * 0.5;
-	if (idx.x > width)idx.x -= width;
-	if (idx.y > height)idx.y -= height;
+	if (idx.x >= width)idx.x -= width;
+	if (idx.y >= height)idx.y -= height;
 	float4 f4 = Tex_ro[idx];
-	f4.xyz *= f4.w;
+	//f4.xyz *= f4.w;
 	Tex[id] = f4;
-
 	InterlockedAdd(SumBuf[0], (uint)(f4.x * 255.0 + 0.5));
 	InterlockedAdd(SumBuf[1], (uint)(f4.y * 255.0 + 0.5));
 	InterlockedAdd(SumBuf[2], (uint)(f4.z * 255.0 + 0.5));
@@ -201,9 +193,10 @@ void FFTX(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_Gr
 [numthreads(NY / 2, 1, 1)]
 void FFTY_HADAMARD_IFFTY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, uint gi : SV_GroupIndex)
 {
+	uint loopidx;
 	blockY[gi] = Tex[uint2(grid, gi)];
 	blockY[gi + NY / 2] = Tex[uint2(grid, gi + NY / 2)];
-	for (uint loopidx = 0; loopidx < MY; loopidx++)
+	for (loopidx = 0; loopidx < MY; loopidx++)
 	{
 		uint dleng = 1 << (MY - loopidx - 1);
 		uint t = gi % dleng;
@@ -251,7 +244,7 @@ void FFTY_HADAMARD_IFFTY(uint id : SV_DispatchThreadID, uint grid : SV_GroupID, 
 	blockY[gi] = reim0;
 	blockY[gi + NY / 2] = reim1;
 	//step2 load
-	for (uint loopidx = 0; loopidx < MY; loopidx++)
+	for (loopidx = 0; loopidx < MY; loopidx++)
 	{
 		uint dleng = 1 << (loopidx);
 		uint t = gi % dleng;

@@ -4,15 +4,20 @@ using UnityEngine.Rendering;
 public class FFTBloom : MonoBehaviour
 {
     //Bloom設定周り
-    const int fftSize = 1024;
+    const int fftSize = 512;
     private RenderTextureFormat bloomTexFormat = RenderTextureFormat.ARGBFloat;//or ARGBHalf
 
     //compute shader周り
     [SerializeField] private ComputeShader cs;
-    [SerializeField] private Texture2D convolutionKernel;
+    [SerializeField] private Texture2D convolutionKernel;//深度8bitのpng。1色あたり256しかない
+    [SerializeField] private bool use256x4;//256x4のほうを使うか普通のconvolutionKernelを使うか。基本ダイナミックレンジでやったほうが見た目がいい
+    [SerializeField] private Texture2D convolutionKernel_256x4a;//深度8bitのpngを4枚つかってダイナミックレンジを擬似的に再現
+    [SerializeField] private Texture2D convolutionKernel_256x4b;//深度8bitのpngを4枚つかってダイナミックレンジを擬似的に再現
+    [SerializeField] private Texture2D convolutionKernel_256x4c;//深度8bitのpngを4枚つかってダイナミックレンジを擬似的に再現
+    [SerializeField] private Texture2D convolutionKernel_256x4d;//深度8bitのpngを4枚つかってダイナミックレンジを擬似的に再現
     [SerializeField] private float intensity;
     [SerializeField] private FFTBloomRenderFeature _feature;//feature側からここのFFT関数が呼ばれる
-
+    
     private float intensity_back;//convolutionKernelに指定した画像が明るくても暗くても1になるよう正規化する意味がある
     private int kernelFFTX, kernelIFFTX;
     private int kernelFFTY_HADAMARD_IFFTY;
@@ -27,7 +32,6 @@ public class FFTBloom : MonoBehaviour
     //Descriptor関連
     private RenderTextureDescriptor descriptor34, descriptor44, descriptor43, out_descriptor;//RGBA=4,RGB=3
     public RenderTextureDescriptor Descriptor => out_descriptor;//出力の画像の大きさ
-
 
     private void Awake()
     {
@@ -52,6 +56,48 @@ public class FFTBloom : MonoBehaviour
 
         //convolutionKernelからfft後のWeightを計算
         CreateWeight();
+    }
+
+    void Uchar4toFloat(RenderTexture outtex)
+    {
+        var c32a = convolutionKernel_256x4a.GetPixels32(0);
+        var c32b = convolutionKernel_256x4b.GetPixels32(0);
+        var c32c = convolutionKernel_256x4c.GetPixels32(0);
+        var c32d = convolutionKernel_256x4d.GetPixels32(0);
+        var w = convolutionKernel_256x4a.width;
+        var h = convolutionKernel_256x4a.height;
+
+        float[] host_data = new float[w * h * 4];
+
+        float ms = 0.0f;
+        for (int i = 0; i < w * h; i++)
+        {
+            uint ir = (((uint)c32a[i].r * 256 + c32b[i].r) * 256 + c32c[i].r) * 256 + c32d[i].r;
+            uint ig = (((uint)c32a[i].g * 256 + c32b[i].g) * 256 + c32c[i].g) * 256 + c32d[i].g;
+            uint ib = (((uint)c32a[i].b * 256 + c32b[i].b) * 256 + c32c[i].b) * 256 + c32d[i].b;
+            host_data[i * 4 + 0] = (float)ir / 65536.0f / 65536.0f;
+            host_data[i * 4 + 1] = (float)ig / 65536.0f / 65536.0f;
+            host_data[i * 4 + 2] = (float)ib / 65536.0f / 65536.0f;
+            host_data[i * 4 + 3] = 0.0f;
+            ms += host_data[i * 4 + 0];
+        }
+
+        //SetPixelsのほうではうまくいかなかったのでComputeShaderを介してRenderTextureにコピーする
+        var tmpbuf = new ComputeBuffer(w * h * 4, 4);
+        tmpbuf.SetData(host_data);
+        var tmprtex = new RenderTexture(w, h, 0, bloomTexFormat);
+        tmprtex.enableRandomWrite = true;
+        tmprtex.Create();
+        int kernel = cs.FindKernel("BufToTex");
+        cs.SetInt("width", w);
+        cs.SetInt("height", h);
+        cs.SetTexture(kernel, "Tex", tmprtex);
+        cs.SetBuffer(kernel, "Buf_ro", tmpbuf);
+        cs.Dispatch(kernel, (w + 7) / 8, (h + 7) / 8, 1);
+
+        Graphics.Blit(tmprtex, outtex);//ComputeShaderはRenderTextureしか扱えないので
+        tmpbuf.Release();
+        tmprtex.Release();
     }
 
     void DescriptorInit() 
@@ -87,12 +133,20 @@ public class FFTBloom : MonoBehaviour
         SumBuf.SetData(res);
 
         //Convolution kernel読み込み→rtex2
-        Graphics.Blit(convolutionKernel, rtex2);//ComputeShaderはRenderTextureしか扱えないので
+        if (use256x4)
+        {
+            Uchar4toFloat(rtex2);
+        }
+        else 
+        {
+            Graphics.Blit(convolutionKernel, rtex2);//ComputeShaderはRenderTextureしか扱えないので
+        }
 
         //テクスチャの中心を0,0に移動。ついでにSumBufに全画素値合計する
         cs.SetBuffer(kernelCopySlide, "SumBuf", SumBuf);
         cs.SetTexture(kernelCopySlide, "Tex_ro", rtex2);
         cs.SetTexture(kernelCopySlide, "Tex", rtex1);
+        cs.SetBool("use256x4", use256x4);
         cs.SetInt("width", fftSize);
         cs.SetInt("height", fftSize);
         cs.Dispatch(kernelCopySlide, fftSize / 8, fftSize / 8, 1);
@@ -112,8 +166,14 @@ public class FFTBloom : MonoBehaviour
         for (int i = 1; i < 3; i++)
             intensity_back = Mathf.Max(intensity_back, res[i]);
         if (intensity_back != 0.0f)
+        {
             intensity_back = 255.0f / intensity_back;
-
+        }
+        else 
+        {
+            Debug.Log("ConvolutionKernelが真っ黒です");
+        }
+        
         //Release
         RenderTexture.active = null;//これがないとrtex2の解放でReleasing render texture that is set to be RenderTexture.active!が発生する
         rtex3.Release();
@@ -121,8 +181,6 @@ public class FFTBloom : MonoBehaviour
         rtex1.Release();
         SumBuf.Release();
     }
-
-
 
     /// RenderTextureを入力するとFFT Convolutionを実行した結果がRenderTextureで返る
     public RenderTexture FFTConvolution(RenderTexture source)
@@ -155,8 +213,6 @@ public class FFTBloom : MonoBehaviour
         return returnRT;
     }
 
-
-
     /// srcID画像を入力するとFFT Convolutionを実行した結果がdstIDの画像にはいる
     /// srcIDの画像サイズがfftできるサイズじゃなければsrc_w,src_hを入力すること
     public void FFTConvolutionFromRenderPass(CommandBuffer commandBuffer, int srcID, int dstID, int src_w = -1, int src_h = -1)
@@ -188,13 +244,9 @@ public class FFTBloom : MonoBehaviour
         return;
     }
 
-
-
-
     private void OnDisable()
     {
         rtWeight.Release();
     }
-
 }
 
