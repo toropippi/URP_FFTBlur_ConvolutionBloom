@@ -1,9 +1,9 @@
 # URP_FFTBlur_ConvolutionBloom 
  Blur and convolution bloom implementation using 2DFFT  
  このリポジトリは2D FFTを用いたブラーとConvolution Bloomの実装になります。  
- ![説明8](https://user-images.githubusercontent.com/44022497/230789234-a674cb95-186d-40c6-91ed-b258e7a1c950.gif)
- ![blur](https://user-images.githubusercontent.com/44022497/230791100-ac21dc16-52ef-4ded-989a-2278afd35d3f.jpeg)  
-  
+ ![blur](https://user-images.githubusercontent.com/44022497/230791100-ac21dc16-52ef-4ded-989a-2278afd35d3f.jpeg)
+ ![説明8](https://user-images.githubusercontent.com/44022497/230789234-a674cb95-186d-40c6-91ed-b258e7a1c950.gif)  
+ 
 # 使い方 How to use 
  ユーザーがいじれるところ主に2ヶ所です。  
 ## 1.Hierarchyタブにある「FFTObject」  
@@ -85,6 +85,7 @@
 ・Kernel画像の自動生成プログラムもそのうち公開したい  
 
 # その他
+・標準のBloomはチェックを外しています。  
 ・FFTサイズの変更はソースコード内を直接いじって下さい。C#側とCompute Shader側にそれぞれあります。  
 ・Assets/FFTConvolutionBloom/ConvolutionTexture以下にある全画像ファイルは自分が生成したものですが、商用利用OK、 改変OK、クレジット表記不要の「CC0」ライセンスとします。  
 
