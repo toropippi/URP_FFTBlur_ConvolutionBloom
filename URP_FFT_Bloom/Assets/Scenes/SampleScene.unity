@@ -467,7 +467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cs: {fileID: 7200000, guid: 41e87edfa954aa14ca5aadef5ba2935c, type: 3}
-  convolutionKernel: {fileID: 2800000, guid: fa3e4e5d97ecdb843bba910b477267a5, type: 3}
+  convolutionKernel: {fileID: 2800000, guid: 8f6829773a87f0e4ea597e44b16711e7, type: 3}
   use256x4: 1
   convolutionKernel_256x4a: {fileID: 2800000, guid: 48d4510cca07b87438b784aa41508fb9, type: 3}
   convolutionKernel_256x4b: {fileID: 2800000, guid: a198dc71c0984754f9772e6572b50590, type: 3}
