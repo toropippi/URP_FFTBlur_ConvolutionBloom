@@ -22,7 +22,7 @@
 ![6](https://user-images.githubusercontent.com/44022497/230788304-93bda2eb-9d58-468b-95dc-9a593b132c5b.jpg)  
  このとき画像の中心の一番明るい部分と画面端の黒い部分は本来1万倍～100万倍近く違ってないといけません。この画像では真ん中が白飛びして、端のほうは黒飛びしてしまっています。  
  普通のpng画像はせいぜいRGBAそれぞれ8bitなのでレンジが狭くこのままでは使えません。そこでa～dの4枚用意し、a×1677216+b×65536+c×256+dを本当の色として計算を行ないます。  
- 今回サンプルを7つほど用意しているのでそれをお使い下さい。  
+ 今回サンプルを9つほど用意しているのでそれをお使い下さい。(HDR画像を使えばいろいろ解決するのですが用意するのが難しくて断念しました)  
  また自前で色深度が十分なpng画像を用意できるならUse256x4のチェックはせずにConvolution Kernelを使うこともできます。  
 
 ### Intensity
@@ -33,8 +33,9 @@
  <img width="460" alt="setumei2.png" src="https://user-images.githubusercontent.com/44022497/230786919-4ac6aabd-bdba-4df5-b4fc-e948c3e7cf42.png">
  
 ### Selected Pass
- 3つのモードが選択できます。  
- ![説明5](https://user-images.githubusercontent.com/44022497/230788533-2077b6c8-b43e-4657-a750-9b1c9c36fb64.png)  
+ 4つのモードが選択できます。  
+ ブラー2種類、Convolution Bloom 2種類あります。  
+ ![setumei12](https://user-images.githubusercontent.com/44022497/231661596-4b5256fd-e44d-4ca3-bb7c-435948177cc3.png)  
  
 ### BorderRatio
  畳み込み前に画像に余白を持たせて、畳み込み後にその余白部分を使わない設定です。  
@@ -45,7 +46,7 @@
  画面の明るい部分の閾値。  
  Convolution Bloomでのみ使われます。閾値を超えるピクセルにBloomがかかります。  
  
-# 3つのモード
+# 4つのモード
 
 ## Gauss Blur Render Pass
  単純にブラーを行なうものです。  
@@ -54,6 +55,7 @@
  
 ## Gauss Blur Border Render Pass 
  BorderRatioを考慮したGauss Blur Render Passです。
+ BorderRatioをあげるとブラーのための解像度が悪化するので注意して下さい。  
 
 ## Bloom Render Pass
  Convolution Bloomを行なうPassです。  
@@ -75,13 +77,20 @@
  kernel画像と実行結果  
  ![samp1](https://user-images.githubusercontent.com/44022497/230789287-1ceba284-a26a-4083-8145-b2ad88a24465.jpg)
  ![bloom1](https://user-images.githubusercontent.com/44022497/230789289-8824235d-6fde-449a-b016-23ee3781892a.jpg)  
+  
+## Bloom DWT Render Pass
+ Bloom Render Passでは巡回畳み込み影響で画面端から端に回り込んでしまう問題がありました。  
+ ![説明1](https://user-images.githubusercontent.com/44022497/231662382-97acada1-da4d-40e0-9694-e0da89754b1c.jpg)  
+ BorderRatioをあげて解決する方法もありますがこのPassを使っても解決できます。  
+ 原理としては下記のように正巡回畳み込みと負巡回畳み込みの結果を足して2で割っています。回り込んでいる部分が黒く反転しているのが負巡回畳み込みの結果です。  
+ ![hujunkai](https://user-images.githubusercontent.com/44022497/231662539-83288b31-5a73-45f6-be3e-ac8c54927d87.jpg)  
+ 理論上はX方向とY方向にたいして計算しているので計算量は4倍、メモリ消費量も4倍ですが実装すると2倍ですむところもあるため全体の計算量は3.3倍くらいです。  
  
 # TODOリスト
 ・FFTサイズは512×512固定だがインスペクターから可変にできるようにする  
 ・実行中にConvolution Kernelを変更したら自動で重みを再計算するようにする  
 ・Convolution Kernelのスケールを設定できるようにする  
 ・Convolution Kernelの中心ピボットを設定できるようにする  
-・今はBorderRatioで余白を作って対処しているところを、負巡回畳み込み乗算を使って解決する。計算量は2倍になる(多分)がBorderRatioは0にできるはず  
 ・Kernel画像の自動生成プログラムもそのうち公開したい  
 
 # その他
