@@ -8,11 +8,13 @@ public class FFTBloomRenderFeature : ScriptableRendererFeature
     GaussBlurRenderPass _renderPassGaussBlur;
     GaussBlurBorderRenderPass _renderPassGaussBlurBorder;
     BloomRenderPass _renderPassBloom;
+    BloomDWTRenderPass _renderPassBloomDWT;
     public enum SelectedPass
     {
         GaussBlurRenderPass,
         GaussBlurBorderRenderPass,
-        BloomRenderPass
+        BloomRenderPass,
+        BloomDWTRenderPass
     }
 
     [SerializeField] SelectedPass selectedPass = SelectedPass.GaussBlurRenderPass;
@@ -25,14 +27,13 @@ public class FFTBloomRenderFeature : ScriptableRendererFeature
     [SerializeField] [Range(0f, 0.499f)] float borderRatio;
     [SerializeField] float threshold = 2.5f;//Bloom‚©‚¯‚é–¾‚é‚³‚Ì‚µ‚«‚¢’l
 
-
     public override void Create()
     {
         _renderPassGaussBlur = new GaussBlurRenderPass();
         _renderPassGaussBlurBorder = new GaussBlurBorderRenderPass(scalingShader);
         _renderPassBloom = new BloomRenderPass(bloomFirstShader, bloomFinalShader);
+        _renderPassBloomDWT = new BloomDWTRenderPass(bloomFirstShader, bloomFinalShader);
     }
-
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
@@ -55,7 +56,11 @@ public class FFTBloomRenderFeature : ScriptableRendererFeature
                 _renderPassBloom.SetFFT(_fFTBloom);
                 renderer.EnqueuePass(_renderPassBloom);
                 break;
-
+            case SelectedPass.BloomDWTRenderPass:
+                _renderPassBloomDWT.SetParam(renderer.cameraColorTarget, threshold);
+                _renderPassBloomDWT.SetFFT(_fFTBloom);
+                renderer.EnqueuePass(_renderPassBloomDWT);
+                break;
             default:
                 break;
         }

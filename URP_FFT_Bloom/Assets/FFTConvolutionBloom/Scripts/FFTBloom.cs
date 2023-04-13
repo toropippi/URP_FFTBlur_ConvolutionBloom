@@ -227,13 +227,13 @@ public class FFTBloom : MonoBehaviour
 
     /// srcID画像を入力するとFFT Convolutionを実行した結果がdstIDの画像にはいる
     /// srcIDの画像サイズがfftできるサイズじゃなければsrc_w,src_hを入力すること
+    /// 正巡回畳み込みであることに注意(画像の端から端に回り込んでしまう)
     public void FFTConvolutionFromRenderPass(CommandBuffer commandBuffer, int srcID, int dstID, int src_w = -1, int src_h = -1)
     {
         if (rtWeight == null) Awake();
         if (src_w == -1) src_w = descriptor44.width;
         if (src_h == -1) src_h = descriptor44.height;
 
-        /*
         commandBuffer.GetTemporaryRT(rt34_i, descriptor34);
 
         commandBuffer.SetComputeFloatParam(cs, "_intensity", intensity * intensity_back);//intensity_backも乗算することで自動明るさ調整
@@ -254,7 +254,18 @@ public class FFTBloom : MonoBehaviour
         commandBuffer.SetComputeTextureParam(cs, kernelIFFTX, "Tex_ro", rt34_i);
         commandBuffer.SetComputeTextureParam(cs, kernelIFFTX, "Tex", dstID);
         commandBuffer.DispatchCompute(cs, kernelIFFTX, fftSize, 1, 1);
-        */
+        return;
+    }
+
+    /// srcID画像を入力するとFFT Convolutionを実行した結果がdstIDの画像にはいる
+    /// srcIDの画像サイズがfftできるサイズじゃなければsrc_w,src_hを入力すること
+    /// 正巡回+負巡回で回り込んでしまう影響をなくしたver。離散荷重変換DWTを使っているが3.3倍重い
+    /// こちら使う子を一応推奨
+    public void FFTConvolutionFromRenderPassDWT(CommandBuffer commandBuffer, int srcID, int dstID, int src_w = -1, int src_h = -1)
+    {
+        if (rtWeight == null) Awake();
+        if (src_w == -1) src_w = descriptor44.width;
+        if (src_h == -1) src_h = descriptor44.height;
 
         commandBuffer.GetTemporaryRT(rt64_i, descriptor64);
 
@@ -279,6 +290,7 @@ public class FFTBloom : MonoBehaviour
 
         return;
     }
+
 
     private void OnDisable()
     {

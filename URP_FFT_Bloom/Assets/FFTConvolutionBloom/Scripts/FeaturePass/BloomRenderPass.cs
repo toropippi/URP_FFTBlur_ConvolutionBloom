@@ -4,7 +4,7 @@ using UnityEngine.Rendering.Universal;
 
 public class BloomRenderPass : ScriptableRenderPass
 {
-    private const string CommandBufferName = nameof(GaussBlurRenderPass);
+    private const string CommandBufferName = nameof(BloomRenderPass);
 
     private RenderTargetIdentifier _colorTarget;
     private FFTBloom _fFTBloom = null;
