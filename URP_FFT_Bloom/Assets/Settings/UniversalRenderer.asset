@@ -17,7 +17,7 @@ MonoBehaviour:
   scalingShader: {fileID: 4800000, guid: 2f6900b01c424014995fc3f7c2a463d5, type: 3}
   bloomFirstShader: {fileID: 4800000, guid: 4f8e3dadcf9c5264bad0f9831edd1940, type: 3}
   bloomFinalShader: {fileID: 4800000, guid: bba9e43eb48436c428aa0b4c8153fad0, type: 3}
-  borderRatio: 0.246
+  borderRatio: 0
   threshold: 8.19
 --- !u!114 &11400000
 MonoBehaviour:
