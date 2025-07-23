@@ -26,10 +26,14 @@
  また自前で色深度が十分なpng画像を用意できるならUse256x4のチェックはせずにConvolution Kernelを使うこともできます。  
 
 ### Intensity
- 畳み込み画像に適応される色倍率です。  
- ブラー用途では1.0、Convolution Bloom用途では100.0くらいが適切な値です。  
+畳み込み画像に適応される色倍率です。
+ブラー用途では1.0、Convolution Bloom用途では100.0くらいが適切な値です。
 
-## 2.SettingsのUniversalRendererにアタッチしてあるFeature  
+## 2.Post-process Volumeでの設定
+UniversalRendererを直接編集しなくても、Volume Profileに**Bloom FFT**を追加すれば
+IntensityやThresholdを他のエフェクトと同じように調整できます。
+
+## 3.SettingsのUniversalRendererにアタッチしてあるFeature
  <img width="460" alt="setumei2.png" src="https://user-images.githubusercontent.com/44022497/230786919-4ac6aabd-bdba-4df5-b4fc-e948c3e7cf42.png">
  
 ### Selected Pass
